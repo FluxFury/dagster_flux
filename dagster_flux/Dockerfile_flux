@@ -1,0 +1,34 @@
+FROM python:3.12-slim
+
+ENV UV_PROJECT_ENVIRONMENT=/usr/local
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssh-client  \
+    git \
+    libpq-dev \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/ 
+
+RUN mkdir -p /root/.ssh && \
+    chmod 700 /root/.ssh && \
+    ssh-keyscan github.com >> /root/.ssh/known_hosts
+
+WORKDIR /opt/dagster/app
+
+COPY README.md pyproject.toml uv.lock ./
+COPY dagster_flux ./dagster_flux
+
+RUN --mount=type=ssh \
+    uv sync -v --frozen --no-install-project
+
+
+RUN --mount=type=ssh \
+    uv sync --frozen
+
+
+# Run dagster code server on port 4000
+EXPOSE 4000
+
+# CMD allows this to be overridden from run launchers or executors to execute runs and steps
+CMD ["dagster", "api", "grpc", "-f", "dagster_flux/definitions.py", "-h", "0.0.0.0", "-p", "4000"]

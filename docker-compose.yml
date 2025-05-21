@@ -1,0 +1,97 @@
+services:
+
+  dagster_postgres:
+    image: postgres:17
+    container_name: dagster_postgres
+    environment:
+      POSTGRES_USER: "${DAGSTER_POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${DAGSTER_POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${DAGSTER_POSTGRES_DB}"
+      PGPORT: "${DAGSTER_POSTGRES_PORT}"
+    networks:
+      - flux-backend_app_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DAGSTER_POSTGRES_USER} -d ${DAGSTER_POSTGRES_DB} -p ${DAGSTER_POSTGRES_PORT}"]
+      interval: 10s
+      timeout: 8s
+      retries: 5
+    ports:
+      - "${DAGSTER_POSTGRES_PORT}:${DAGSTER_POSTGRES_PORT}"
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+  
+  dagster_flux:
+    build:
+      context: .
+      dockerfile: ./dagster_flux/Dockerfile_flux
+      ssh:
+        - default
+    image: dagster_flux_image
+    container_name: dagster_flux
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./dagster_flux:/opt/dagster/app/dagster_flux
+    networks:
+      - flux-backend_app_network
+
+  dagster_flux_webserver:
+    build:
+      context: .
+      dockerfile: ./Dockerfile_dagster
+    entrypoint:
+      - dagster-webserver
+      - -h
+      - '0.0.0.0'
+      - -p
+      - '3000'
+      - -w
+      - workspace.yaml
+    container_name: dagster_flux_webserver
+    expose:
+      - '3000'
+    ports:
+      - '3000:3000'
+    env_file:
+      - .env
+    volumes: # Make docker client accessible so we can terminate containers from the webserver
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/io_manager_storage:/tmp/io_manager_storage
+    networks:
+      - flux-backend_app_network
+    depends_on:
+      dagster_postgres:
+        condition: service_healthy
+      dagster_flux:
+        condition: service_started
+
+  # This service runs the dagster-daemon process, which is responsible for taking runs
+  # off of the queue and launching them, as well as creating runs from schedules or sensors.
+  dagster_flux_daemon:
+    build:
+      context: .
+      dockerfile: ./Dockerfile_dagster
+    entrypoint:
+      - dagster-daemon
+      - run
+    container_name: dagster_flux_daemon
+    restart: on-failure
+    env_file:
+      - .env
+    volumes: # Make docker client accessible so we can launch containers using host docker
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/io_manager_storage:/tmp/io_manager_storage
+    networks:
+      - flux-backend_app_network
+    depends_on:
+      dagster_postgres:
+        condition: service_healthy
+      dagster_flux:
+        condition: service_started
+
+
+networks:
+  flux-backend_app_network:  # Define the external network
+    external: true
+

@@ -1,0 +1,15 @@
+run_queue:
+  max_concurrent_runs: 5
+
+sensors:
+  use_threads: true
+  num_workers: 4
+
+storage:
+  postgres:
+    postgres_db:
+      username: dagster
+      password: dagster
+      hostname: 127.0.0.1
+      db_name: dagster
+      port: 5434
