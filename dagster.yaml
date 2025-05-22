@@ -1,5 +1,5 @@
 run_queue:
-  max_concurrent_runs: 5
+  max_concurrent_runs: 10
 
 sensors:
   use_threads: true
@@ -8,8 +8,8 @@ sensors:
 storage:
   postgres:
     postgres_db:
-      username: dagster
-      password: dagster
-      hostname: 127.0.0.1
-      db_name: dagster
-      port: 5434
+      username: {"env": "DAGSTER_POSTGRES_USER"}
+      password: {"env": "DAGSTER_POSTGRES_PASSWORD"}
+      hostname: {"env": "DAGSTER_POSTGRES_HOST"}
+      db_name: {"env": "DAGSTER_POSTGRES_DB"}
+      port: {"env": "DAGSTER_POSTGRES_PORT"}

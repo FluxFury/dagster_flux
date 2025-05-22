@@ -4,13 +4,14 @@ from dagster import get_dagster_logger
 from typing import Any
 
 llm_chat = ChatOpenAI(
-            model="gpt-4o",
-            temperature=0.0,
-            timeout=600,
-            max_retries=5,
-        ).with_structured_output(method="json_mode")
+    model="gpt-4o",
+    temperature=0.0,
+    timeout=600,
+    max_retries=5,
+).with_structured_output(method="json_mode")
 
 logger = get_dagster_logger()
+
 
 async def summarize_news_and_extract_keywords(news: str) -> tuple[str, list[str]]:
     system_prompt = """
@@ -34,7 +35,7 @@ async def summarize_news_and_extract_keywords(news: str) -> tuple[str, list[str]
     """
     messages = [
         SystemMessage(content=system_prompt),
-        HumanMessage(content=human_prompt)
+        HumanMessage(content=human_prompt),
     ]
     completion = await llm_chat.ainvoke(messages)
     json_response = completion
@@ -59,16 +60,19 @@ async def determine_match_to_news_relevance(match_news_pair: dict[str, Any]) -> 
     logger.info(f"Determining if match is relevant to news: {human_prompt}")
     messages = [
         SystemMessage(content=system_prompt),
-        HumanMessage(content=human_prompt)
+        HumanMessage(content=human_prompt),
     ]
     completion = await llm_chat.ainvoke(messages)
     json_response = completion
     is_relevant = json_response["is_relevant"]
     return is_relevant
 
-async def rank_news_by_llm(match_to_llm: dict[str, Any], news_to_llm_list: list[dict[str, Any]]) -> dict[str, int]:
+
+async def rank_news_by_llm(
+    match_to_llm: dict[str, Any], news_to_llm_list: list[dict[str, Any]]
+) -> dict[str, int]:
     rankings = {}
-    
+
     system_prompt = """
     You are a helpful assistant that ranks news articles by relevance to a sports match.
     You should return a JSON dictionary with the following field:
@@ -84,7 +88,7 @@ async def rank_news_by_llm(match_to_llm: dict[str, Any], news_to_llm_list: list[
     """
     messages = [
         SystemMessage(content=system_prompt),
-        HumanMessage(content=human_prompt)
+        HumanMessage(content=human_prompt),
     ]
     completion = await llm_chat.ainvoke(messages)
     rankings: dict[str, int] = completion

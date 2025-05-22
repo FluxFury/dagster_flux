@@ -1,4 +1,3 @@
-
 from dagster import ConfigurableResource
 from kafka import KafkaConsumer
 
@@ -6,6 +5,7 @@ from kafka import KafkaConsumer
 class KafkaResource(ConfigurableResource):
     bootstrap_servers: list[str]
     topics: list[str]
+
     def get_consumer(self, group_id: str):
         return KafkaConsumer(
             *self.topics,

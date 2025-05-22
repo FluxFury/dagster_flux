@@ -191,7 +191,9 @@ def rank_when_many_news(context: SensorEvaluationContext):
     for mid in match_ids:
         yield RunRequest(
             run_key=f"rank:{mid}",
-            run_config={"ops": {"rank_news_by_llm_op": {"config": {"match_id": str(mid)}}}},
+            run_config={
+                "ops": {"rank_news_by_llm_op": {"config": {"match_id": str(mid)}}}
+            },
         )
 
 
@@ -211,9 +213,10 @@ def mark_matches_finished(context: SensorEvaluationContext):
                     select(Match.status_id)
                     .join(MatchStatus, MatchStatus.status_id == Match.status_id)
                     .where(
-                        MatchStatus.name.in_(
-                            [MatchStatusEnum.LIVE, MatchStatusEnum.SCHEDULED]
-                        ),
+                        MatchStatus.name.in_([
+                            MatchStatusEnum.LIVE,
+                            MatchStatusEnum.SCHEDULED,
+                        ]),
                         Match.planned_start_datetime <= five_hours_ago,
                     )
                 )
@@ -231,6 +234,8 @@ def mark_matches_finished(context: SensorEvaluationContext):
         yield RunRequest(
             run_key=f"mark_match_finished:{status_id}",
             run_config={
-                "ops": {"mark_match_finished_op": {"config": {"status_id": str(status_id)}}}
+                "ops": {
+                    "mark_match_finished_op": {"config": {"status_id": str(status_id)}}
+                }
             },
         )

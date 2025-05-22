@@ -12,10 +12,10 @@ from dagster_flux.ops import (
     mark_match_finished_op,
 )
 
+
 @job
 def news_processing_job():
-    """
-    """
+    """ """
     raw_news = read_raw_news_from_kafka_op()
     formatted_news = summarize_and_format_news_op(raw_news)
     stored_formatted_news = store_formatted_news_in_db_op(formatted_news)
@@ -24,7 +24,6 @@ def news_processing_job():
     filtered_by_algorithm_pairs = filter_pairs_by_algorithm_op(cross_result)
     filtered_by_llm_pairs = filter_pairs_by_llm_op(filtered_by_algorithm_pairs)
     store_filtered_match_in_news_op(filtered_by_llm_pairs)
-
 
 
 @job

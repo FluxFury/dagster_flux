@@ -17,6 +17,7 @@ from flux_orm.models.utils import utcnow_naive
 from typing import Sequence
 from flux_orm.models.utils import model_to_dict
 
+
 @op(
     config_schema={"raw_news_batch": list},  # предполагаем, что сюда придёт список dict
     out=Out(list[dict[str, Any]]),
@@ -42,7 +43,9 @@ async def summarize_and_format_news_op(
     for news in raw_news_list:
         # Пример ассинхронного вызова LLM
         async with get_semaphore():
-            summary, keywords = await summarize_news_and_extract_keywords(news.get("text"))
+            summary, keywords = await summarize_news_and_extract_keywords(
+                news.get("text")
+            )
         # Пример “форматирования” (реально – вызываете свой LLM):
         formatted_news = {
             "sport_id": news.get("sport_id"),
@@ -134,13 +137,12 @@ async def cross_news_with_matches_op(
         for match in matches_list
         for news in news_dict.values()
     ]
-    
-    
+
     if len(cross_result) == 0:
         return []
 
     context.log.info(f"Pairs generated: {len(cross_result)}")
-    
+
     return cross_result
 
 
@@ -157,7 +159,7 @@ async def filter_pairs_by_algorithm_op(
         context.log.info(f"алгоритм фильтрация пары: {pair}")
         if check_news_relevance(pair["news"]):
             filtered_pairs.append(pair)
-    
+
     if not filtered_pairs:  # len == 0
         return []
     context.log.info(
@@ -276,7 +278,6 @@ async def rank_news_by_llm_op(context):
         for pair in pairs:
             pair.respective_relevance = rankings[str(pair.news_id)]
 
-
         match_obj.pipeline_update_time = utcnow_naive()
         try:
             await ses.commit()
@@ -285,7 +286,6 @@ async def rank_news_by_llm_op(context):
             await ses.rollback()
 
     context.log.info(f"Ранжировано {len(pairs)} новостей для матча {match_id}.")
-
 
 
 @op(

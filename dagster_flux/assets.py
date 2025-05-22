@@ -22,11 +22,13 @@ def loaded_from_kafka(
     for topic, messages in config.topic_to_messages.items():
         context.log.info(f"Processing {len(messages)} messages from topic {topic}")
         all_messages.extend(messages)
-    
+
     context.log.info(f"Handling kafka batch with {len(all_messages)} total messages")
 
     # write file with records, partitioned by min/max batch ids
-    with open(f"data/{'-'.join(f'{t}_{o}' for t, o in config.max_offset.items())}", "w") as f:
+    with open(
+        f"data/{'-'.join(f'{t}_{o}' for t, o in config.max_offset.items())}", "w"
+    ) as f:
         f.writelines(all_messages)
 
     return MaterializeResult(
