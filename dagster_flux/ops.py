@@ -277,7 +277,7 @@ async def rank_news_by_llm_op(context):
             )
         for pair in pairs:
             pair.respective_relevance = rankings[str(pair.news_id)]
-
+        match_obj.pipeline_status = PipelineStatus.NEW
         match_obj.pipeline_update_time = utcnow_naive()
         try:
             await ses.commit()

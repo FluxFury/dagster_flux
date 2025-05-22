@@ -18,7 +18,7 @@ services:
     ports:
       - "${DAGSTER_POSTGRES_PORT}:${DAGSTER_POSTGRES_PORT}"
     volumes:
-      - ./postgres_data:/var/lib/postgresql/data
+      - ./postgres_dagster_data:/var/lib/postgresql/data
   
   dagster_flux:
     build:

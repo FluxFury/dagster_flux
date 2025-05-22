@@ -19,7 +19,7 @@ async def summarize_news_and_extract_keywords(news: str) -> tuple[str, list[str]
     You should return a JSON object with the following fields:
     - summary: a summary of the news article
     - keywords: a dict of keywords extracted from the news article with the following fields:
-        - People: a list of people mentioned in the news article
+        - People: a list of people mentioned in the news article, if a person has a nickname, use the following format: "First name 'nickname' Last name"
         - Organizations: a list of organizations mentioned in the news article
         - Locations: a list of locations mentioned in the news article
         - Events: a list of events mentioned in the news article
