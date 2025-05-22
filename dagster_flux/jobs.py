@@ -9,6 +9,7 @@ from dagster_flux.ops import (
     store_filtered_match_in_news_op,
     rank_news_by_llm_op,
     filter_pairs_by_algorithm_op,
+    mark_match_finished_op,
 )
 
 @job
@@ -31,3 +32,6 @@ def ranking_job():
     rank_news_by_llm_op()
 
 
+@job
+def mark_matches_finished_job():
+    mark_match_finished_op()

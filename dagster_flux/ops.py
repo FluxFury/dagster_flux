@@ -11,11 +11,11 @@ from dagster_flux.utils import check_news_relevance, prepare_match_to_llm, get_s
 from sqlalchemy import select
 from flux_orm.models.models import Match, Team
 from sqlalchemy.orm import joinedload
-from flux_orm.models.models import FilteredMatchInNews, PipelineStatus
+from flux_orm.models.models import FilteredMatchInNews, PipelineStatus, MatchStatus
+from flux_orm.models.enums import MatchStatusEnum
 from flux_orm.models.utils import utcnow_naive
 from typing import Sequence
 from flux_orm.models.utils import model_to_dict
-
 
 @op(
     config_schema={"raw_news_batch": list},  # предполагаем, что сюда придёт список dict
@@ -231,7 +231,7 @@ async def store_filtered_match_in_news_op(
 
 
 @op(
-    config_schema={"match_id": int},
+    config_schema={"match_id": str},
     description="Пакетное ранжирование новостей для одного матча",
 )
 async def rank_news_by_llm_op(context):
@@ -276,7 +276,7 @@ async def rank_news_by_llm_op(context):
         for pair in pairs:
             pair.respective_relevance = rankings[str(pair.news_id)]
 
-        match_obj.pipeline_status = PipelineStatus.PROCESSED
+
         match_obj.pipeline_update_time = utcnow_naive()
         try:
             await ses.commit()
@@ -285,3 +285,17 @@ async def rank_news_by_llm_op(context):
             await ses.rollback()
 
     context.log.info(f"Ранжировано {len(pairs)} новостей для матча {match_id}.")
+
+
+
+@op(
+    config_schema={"status_id": str},
+    description="Метка матча как прошедшего",
+)
+async def mark_match_finished_op(context):
+    status_id = context.op_config["status_id"]
+    async with new_session() as ses:
+        match_stmt = select(MatchStatus).where(MatchStatus.status_id == status_id)
+        match_status = (await ses.execute(match_stmt)).unique().scalar_one()
+        match_status.name = MatchStatusEnum.FINISHED
+        await ses.commit()
